@@ -1,4 +1,65 @@
-//THIS IS TEST
+$(function () {
+  $("#getStartedForm")
+    .parsley()
+    .on("form:submit", function () {
+      const form = document.getElementById("getStartedForm");
+
+      // Check if the form is valid according to Parsley
+      if ($(form).parsley().isValid()) {
+        // Verify reCAPTCHA response
+        const recaptchaResponse = grecaptcha.getResponse();
+
+        if (recaptchaResponse === "") {
+          // reCAPTCHA not completed, show an error message or take appropriate action
+          //alert("Please complete the reCAPTCHA.");
+          const recaptchaField = $("#recaptcha-field"); // Replace with the actual field ID
+          recaptchaField.parsley().addError('custom', {
+            message: 'Please complete the reCAPTCHA.',
+            updateClass: true,
+          });
+          // Insert the error message into the recaptcha-field
+          recaptchaField.append('<div class="error-message">Please complete the reCAPTCHA.</div>');
+          return false; // Prevent form submission
+        }
+
+        // Continue with form submission
+        const formData = new FormData(form);
+        const submitButton = $("#submitFormButton");
+        const loader = $("#loader");
+
+        // Show loader and hide submit button text
+        submitButton.prop("disabled", true); // Disable the button
+        loader.removeClass("d-none").addClass("d-inline-block");
+
+        // Include the reCAPTCHA response in the form data
+        formData.append("recaptcha_response", recaptchaResponse);
+
+        // Send form data using fetch and ES6 arrow functions
+        fetch("initial_quote.php", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.text())
+          .then((data) => {
+            // Hide loader and show submit button text
+            submitButton.prop("disabled", false); // Enable the button again
+            loader.removeClass("d-inline-block").addClass("d-none");
+            // Store form data in local storage
+            localStorage.setItem("formData", JSON.stringify(formData));
+
+            // Redirect to the getquote.php page
+            // window.location.href = "https://boilerquote.000webhostapp.com/offer-page?utm_source=meraboiler"; // Replace with the actual URL
+            window.location.href = "quote";
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+
+      return false; // Don't submit form for this demo
+    });
+});
+
 (function() {
   const obfuscatedFunc = function() {
     $(window).on("load", function() {
